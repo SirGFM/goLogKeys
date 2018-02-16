@@ -52,4 +52,5 @@ Non exhaustive list of resources used to write all this:
 * [MSDN: Installing and Releasing Hook Procedures](https://msdn.microsoft.com/en-US/library/windows/desktop/ms644960(v=vs.85).aspx#installing_releasing)
 * [SO: SetWindowsHookEx with WH_KEYBOARD doesn't work for me, what do I wrong?](https://stackoverflow.com/questions/11176408/setwindowshookex-with-wh-keyboard-doesnt-work-for-me-what-do-i-wrong)
 * [Go: Calling a Windows DLL](https://github.com/golang/go/wiki/WindowsDLLs)
+* [golang.org/x/sys/windows](https://godoc.org/golang.org/x/sys/windows)
 

@@ -27,5 +27,6 @@ func main() {
 
     l.Pop()
     l.Wait()
+    l.Pop()
     return
 }
