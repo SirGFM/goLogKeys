@@ -4,6 +4,7 @@ import (
     "golang.org/x/sys/windows"
     "fmt"
     "syscall"
+    "unsafe"
 )
 
 type winLogger struct {
@@ -15,12 +16,15 @@ type winLogger struct {
     klDll *windows.LazyDLL
     keyCallback *windows.LazyProc
     pop *windows.LazyProc
+    popMulti *windows.LazyProc
     wait *windows.LazyProc
     // Hook returned by SetWindowsHookEx
     hook1 uintptr
     hook2 uintptr
     // Signals that the structure loaded successfully
     done bool
+    // Cached array to retrieve multiple keys at once
+    arr []uint16
 }
 
 // Window handle for low level keyboard hooks
@@ -75,6 +79,12 @@ func (wl *winLogger) Setup() error {
 
     wl.pop = wl.klDll.NewProc("pop")
     err = wl.pop.Find()
+    if err != nil {
+        return err
+    }
+
+    wl.popMulti = wl.klDll.NewProc("popMulti")
+    err = wl.popMulti.Find()
     if err != nil {
         return err
     }
@@ -142,16 +152,53 @@ func (wl *winLogger) Wait() error {
     return err
 }
 
+// Converts a uint16 to a Key and its KeyState
+func uint16ToKey(val uint16) (k Key, ks KeyState) {
+    k = winVKeyToLoggerKey[uint8(val & 0xFF)]
+    if (uint8(val >> 8) & keyReleasedMask) == 0 {
+        ks = Pressed
+    }
+
+    return
+}
+
 // Removes the oldest key from the FIFO.
 func (wl *winLogger) Pop() (k Key, ks KeyState, err error) {
     var r1 uintptr
 
     r1, _, err = wl.pop.Call()
     err = checkError(err)
+    k, ks = uint16ToKey(uint16(r1))
 
-    k = winVKeyToLoggerKey[uint8(r1 & 0xFF)]
-    if (uint8(r1 >> 8) & keyReleasedMask) == 0 {
-        ks = Pressed
+    return
+}
+
+// Removes various keys from the FIFO. Arrays of keys and states may be supplied
+// to avoid alloc'ing memory.
+func (wl *winLogger) PopMulti(inKeys []Key, inStates []KeyState) (keys []Key,
+    states []KeyState, err error) {
+
+    var r1 uintptr
+
+    if wl.arr == nil {
+        wl.arr = make([]uint16, 0x7FF)
+    }
+
+    r1, _, err = wl.popMulti.Call(uintptr(unsafe.Pointer(&wl.arr[0])), uintptr(len(wl.arr)))
+    err = checkError(err)
+    if err != nil {
+        return
+    }
+
+    // Clear the supplied arrays
+    keys = inKeys[:0]
+    states = inStates[:0]
+
+    for i := 0; i < int(r1); i++ {
+        k, ks := uint16ToKey(wl.arr[i])
+
+        keys = append(keys, k)
+        states = append(states, ks)
     }
 
     return

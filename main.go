@@ -20,9 +20,23 @@ func main() {
 
     running := true
     go func() {
+        var keys []logger.Key
+        var states []logger.KeyState
+
         for i := 0; running ; i++ {
-            k, ks, err := l.Pop()
-            fmt.Printf("%+v: %+v (err: %+v\n", k, ks, err)
+            var err error
+
+            keys, states, err = l.PopMulti(keys, states)
+            if err != nil {
+                fmt.Printf("Error: %+v\n", err)
+            } else {
+                for i := range keys {
+                    k := keys[i]
+                    ks := states[i]
+                    fmt.Printf("%+v: %+v\n", k, ks)
+                }
+            }
+
             time.Sleep(time.Millisecond * 500)
         }
     } ()

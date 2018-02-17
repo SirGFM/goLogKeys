@@ -65,7 +65,7 @@ __declspec(dllexport) LRESULT __stdcall keyCallback(int nCode
  * Removes the last entry from the ciclic buffer (if any). If there's no entry,
  * return a fake "injected" key event instead.
  *
- * return The key event (vkCode on lower 8 bits, flags on higher 8)
+ * @return The key event (vkCode on lower 8 bits, flags on higher 8)
  */
 __declspec(dllexport) uint16_t __stdcall pop(void) {
     if (head != tail) {
@@ -77,6 +77,28 @@ __declspec(dllexport) uint16_t __stdcall pop(void) {
     /* Abuse the fact that injected keys aren't logged and simply return a
      * fake-injected key. */
     return 0x12;
+}
+
+/**
+ * Removes the last few entries from the ciclic buffer (if any). The list ends
+ * with a fake "injected" key event.
+ *
+ * @param  [in]arr Array to be filled with key presses.
+ * @param  [in]len Size of the array
+ * @return         Number of entries filled.
+ */
+__declspec(dllexport) uint16_t __stdcall popMulti(uint16_t *arr, uint16_t len) {
+    uint16_t pos;
+
+    // With some extra calculations, this could be at most two 'memcpy's.
+    for (pos = 0; pos < len && head != tail; pos++) {
+        arr[pos] = keys[tail];
+
+        tail++;
+        tail &= MAX_KEYS_MASK;
+    }
+
+    return pos;
 }
 
 /**

@@ -108,4 +108,8 @@ type Logger interface {
     Wait() error
     // Removes the oldest key from the FIFO.
     Pop() (Key, KeyState, error)
+    // Removes various keys from the FIFO. Arrays of keys and states may be supplied
+    // to avoid alloc'ing memory.
+    PopMulti(inKeys []Key, inStates []KeyState) (keys []Key,
+        states []KeyState, err error)
 }
