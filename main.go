@@ -18,15 +18,20 @@ func main() {
         panic(err.Error())
     }
 
+    running := true
     go func() {
-        for i := 0; ; i++ {
-            fmt.Println(i, "hey...")
+        for i := 0; running ; i++ {
+            k, ks, err := l.Pop()
+            fmt.Printf("%+v: %+v (err: %+v\n", k, ks, err)
             time.Sleep(time.Millisecond * 500)
         }
     } ()
 
-    l.Pop()
+    if err := l.Start(); err != nil {
+        panic(err.Error())
+    }
+
     l.Wait()
-    l.Pop()
+    running = false
     return
 }
