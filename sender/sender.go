@@ -115,7 +115,9 @@ func (srv *server) run() {
         for {
             keys, states, err = srv.loggerCtx.PopMulti(keys, states)
             if err != nil {
-                // TODO Do something with the error!
+                // Failed to read the keys... Who know why? There isn't much
+                // else that could be done after this. D:
+                panic(err.Error())
             } else if len(keys) == 0 {
                 break
             }
@@ -138,7 +140,17 @@ func (srv *server) run() {
         tmpBuf = itoa(tmpBuf, state)
         _, err = srv.conn.Write(tmpBuf)
         if err != nil {
-            // TODO Do something with the error!
+            // Failed to send more that... This isn't as bad as failling to read
+            // keys, but this connection to the client may not be realiable
+            // anymore. Close this connection and wait for a new one.
+            err = srv.conn.Close(websocket.UnexpectedError, []byte(err.Error()))
+            if err != nil {
+                // Because of the dumb way that I wrote the WebSocket server, if
+                // this fails there wouldn't be much else to be done (again!)...
+                // So, yeah...
+                panic(err.Error())
+            }
+            return
         }
     }
 }

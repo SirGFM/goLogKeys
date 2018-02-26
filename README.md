@@ -34,6 +34,16 @@ using a 64-bit DLL along with a 64-bit test application (in my 64-bit system).
 However, I believe that injecting a 32-bit DLL into a 32-bit application in a
 64-bit system should be possible...
 
+Building the Go part should be quite straight forward... Try to build it and
+`go get` anything that fails:
+
+```sh
+go get -d github.com/pkg/errors
+go get -d golang.org/x/sys/windows
+go get -d github.com/SirGFM/GoWebSocketProxy/websocket
+GOOS=windows GOARCH=amd64 go build
+```
+
 
 ## Logging on Linux
 

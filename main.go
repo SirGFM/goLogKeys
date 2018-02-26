@@ -11,9 +11,15 @@ import (
 )
 
 type Args struct {
+    // Only URL (if any) from which the server may be accessed.
     Url string
+    // URI where the server is accessed.
     Uri string
+    // Listening port of the server.
     Port int
+    // List of keys that the server filters and pass on to the client. The keys
+    // are assigned bits sequentially.
+    Keys []string
     // NOTE: This field is filled from the information found on the JSON file.
     acceptedKeys []logger.Key
 }
@@ -41,16 +47,8 @@ func parseArgs(filePath string) *Args {
         panic("Found trailing data at the end of the JSON file")
     }
 
-    // TODO Parse the keys into acceptedKeys
-    args.acceptedKeys = []logger.Key{
-        logger.Left,
-        logger.Up,
-        logger.Right,
-        logger.Down,
-        logger.Z,
-        logger.X,
-        logger.A,
-        logger.S,
+    for _, k := range args.Keys {
+        args.acceptedKeys = append(args.acceptedKeys, logger.GetKey(k))
     }
 
     return &args
