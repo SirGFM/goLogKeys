@@ -100,10 +100,10 @@ func (srv *server) run() {
     var states []logger.KeyState
     var tmpBuf []byte
 
+    state := uint32(0)
+
     for {
         var err error
-
-        state := uint32(0)
 
         // Wait for a new update
         _ = <-srv.timer.C
