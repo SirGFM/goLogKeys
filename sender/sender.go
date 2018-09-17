@@ -113,6 +113,10 @@ func (srv *server) run() {
 
         // Read every key press since the last update
         for {
+            // Clear any previously retrieved key press
+            keys = keys[:0]
+            states = states[:0]
+            // Retrieve more key presses
             keys, states, err = srv.loggerCtx.PopMulti(keys, states)
             if err != nil {
                 // Failed to read the keys... Who know why? There isn't much
