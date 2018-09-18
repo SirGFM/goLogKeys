@@ -1,0 +1,15 @@
+{
+    "Url": "localhost",
+    "Uri": "/keylogger",
+    "Port": 60000,
+    "Keys": [
+        "left",
+        "right",
+        "up",
+        "down",
+        "z",
+        "x",
+        "a",
+        "s"
+    ]
+}

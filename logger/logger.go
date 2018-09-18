@@ -10,7 +10,7 @@ const (
 // Keys recognized and returned by the logger
 type Key uint8
 const (
-    _ Key = iota
+    _Nil Key = iota
     Backspace
     Tab
     Return
@@ -92,6 +92,7 @@ const (
     RAlt
     Comma
     Period
+    _Max
 )
 
 // Simple map to convert a string to a Key
