@@ -1,4 +1,5 @@
 // +build dummy
+
 package logger
 
 import (

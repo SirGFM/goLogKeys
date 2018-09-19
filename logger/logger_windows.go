@@ -1,4 +1,5 @@
-// +build !dummy windows
+// +build !dummy,windows
+
 package logger
 
 import (
