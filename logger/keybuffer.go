@@ -1,11 +1,16 @@
 package logger
 
+import (
+    "sync"
+)
+
 type keyBuffer struct {
     size int
     head int
     tail int
     keys []Key
     states []KeyState
+    m sync.Mutex
 }
 
 func newKeyBuffer(size int) *keyBuffer {
@@ -26,6 +31,9 @@ func (kb *keyBuffer) advance_tail() {
 }
 
 func (kb *keyBuffer) push(k Key, s KeyState) {
+    kb.m.Lock()
+    defer kb.m.Unlock()
+
     kb.keys[kb.head] = k
     kb.states[kb.head] = s
     kb.head++
@@ -38,6 +46,9 @@ func (kb *keyBuffer) push(k Key, s KeyState) {
 }
 
 func (kb *keyBuffer) pop() (k Key, s KeyState) {
+    kb.m.Lock()
+    defer kb.m.Unlock()
+
     if kb.head == kb.tail {
         return
     }
@@ -49,7 +60,7 @@ func (kb *keyBuffer) pop() (k Key, s KeyState) {
     return
 }
 
-func (kb *keyBuffer) count_continuous() int {
+func (kb *keyBuffer) unsafe_count_continuous() int {
     if kb.head > kb.tail {
         return kb.head - kb.tail
     } else if kb.head < kb.tail {
@@ -59,7 +70,17 @@ func (kb *keyBuffer) count_continuous() int {
     }
 }
 
+func (kb *keyBuffer) count_continuous() int {
+    kb.m.Lock()
+    defer kb.m.Unlock()
+
+    return kb.unsafe_count_continuous()
+}
+
 func (kb *keyBuffer) count() int {
+    kb.m.Lock()
+    defer kb.m.Unlock()
+
     num := kb.count_continuous()
     if kb.head < kb.tail {
         return num + kb.head + 1
@@ -69,7 +90,10 @@ func (kb *keyBuffer) count() int {
 }
 
 func (kb *keyBuffer) fast_pop(k []Key, s []KeyState) {
-    if len(k) != len(s) || len(k) > kb.count_continuous() {
+    kb.m.Lock()
+    defer kb.m.Unlock()
+
+    if len(k) != len(s) || len(k) > kb.unsafe_count_continuous() {
         panic("logger: Can't use fast_pop() for the requested amount")
     }
 
