@@ -42,7 +42,7 @@ func (wl *dummyLogger) Wait() error {
 
 // Removes the oldest key from the FIFO.
 func (wl *dummyLogger) Pop() (k Key, ks KeyState, err error) {
-    k = Key(rand.Int31n(int32(_Max)))
+    k = Key(rand.Int31n(int32(KeyCount)))
     ks = KeyState(rand.Int31n(2))
     return
 }

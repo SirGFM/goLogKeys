@@ -35,7 +35,7 @@ func TestKeyBuffer(t *testing.T) {
 
     in = make([]Key, 12)
     for i := range in {
-        in[i] = Key(rand.Intn(int(_Max)))
+        in[i] = Key(rand.Intn(int(KeyCount)))
     }
 
     // Basic test: fill buffer and pop everything

@@ -92,7 +92,7 @@ const (
     RAlt
     Comma
     Period
-    _Max
+    KeyCount
 )
 
 // Simple map to convert a string to a Key
