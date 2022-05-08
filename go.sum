@@ -1,0 +1,6 @@
+github.com/SirGFM/GoWebSocketProxy v0.0.0-20180921104100-432a7fd349c8 h1:jT7Kt9G00XQ0e3H/WQA0c4zYWsfr2n6RdWGg+SBhR9Q=
+github.com/SirGFM/GoWebSocketProxy v0.0.0-20180921104100-432a7fd349c8/go.mod h1:eLqoIh6wsOak37uZNYOxhV7XcNCLBNVKjK3qSBoMC7A=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 h1:xHms4gcpe1YE7A3yIllJXP16CMAGuqwO2lX1mTyyRRc=
+golang.org/x/sys v0.0.0-20220422013727-9388b58f7150/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
