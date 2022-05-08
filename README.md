@@ -47,10 +47,13 @@ GOOS=windows GOARCH=amd64 go build
 
 ## Logging on Linux
 
-TODO D:
+Be sure to install `python3-xlib`! Other than that, this should work out of the box.
 
-Should be easy, since `key-mon` does exactly this...
-
+```sh
+go get -d github.com/pkg/errors
+go get -d github.com/SirGFM/GoWebSocketProxy/websocket
+go build
+```
 
 ## Resources
 
