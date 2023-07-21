@@ -26,6 +26,9 @@ const xlib_py_script = `
 #     * Add parenthesis to every print
 #     * Add and execute 'main', which prints briefer informations
 #     * Tested with Python 3
+#
+# 2023-07-21 - Modified by Gabriel Francisco Mandaji:
+#     * Change indentation to tabs
 
 """Library to get X events from Record.
 
@@ -47,265 +50,265 @@ import threading
 import collections
 
 class XEvent(object):
-  """An event, mimics edev.py events."""
-  def __init__(self, atype, scancode, code, value):
-    self._type = atype
-    self._scancode = scancode
-    self._code = code
-    self._value = value
+	"""An event, mimics edev.py events."""
+	def __init__(self, atype, scancode, code, value):
+		self._type = atype
+		self._scancode = scancode
+		self._code = code
+		self._value = value
 
-  def get_type(self):
-    """Get the type of event."""
-    return self._type
-  type = property(get_type)
+	def get_type(self):
+		"""Get the type of event."""
+		return self._type
+	type = property(get_type)
 
-  def get_scancode(self):
-    """Get the scancode if any."""
-    return self._scancode
-  scancode = property(get_scancode)
+	def get_scancode(self):
+		"""Get the scancode if any."""
+		return self._scancode
+	scancode = property(get_scancode)
 
-  def get_code(self):
-    """Get the code string."""
-    return self._code
-  code = property(get_code)
+	def get_code(self):
+		"""Get the code string."""
+		return self._code
+	code = property(get_code)
 
-  def get_value(self):
-    """Get the value 0 for up, 1 for down, etc."""
-    return self._value
-  value = property(get_value)
+	def get_value(self):
+		"""Get the value 0 for up, 1 for down, etc."""
+		return self._value
+	value = property(get_value)
 
-  def __str__(self):
-    return 'type:%s scancode:%s code:%s value:%s' % (self._type, 
-        self._scancode, self._code, self._value)
+	def __str__(self):
+		return 'type:%s scancode:%s code:%s value:%s' % (self._type, 
+				self._scancode, self._code, self._value)
 
 class XEvents(threading.Thread):
-  """A thread to queue up X window events from RECORD extension."""
+	"""A thread to queue up X window events from RECORD extension."""
 
-  _butn_to_code = {
-      1: 'BTN_LEFT', 2: 'BTN_MIDDLE', 3: 'BTN_RIGHT',
-      4: 'REL_WHEEL', 5: 'REL_WHEEL', 6: 'REL_LEFT', 7: 'REL_RIGHT'}
+	_butn_to_code = {
+			1: 'BTN_LEFT', 2: 'BTN_MIDDLE', 3: 'BTN_RIGHT',
+			4: 'REL_WHEEL', 5: 'REL_WHEEL', 6: 'REL_LEFT', 7: 'REL_RIGHT'}
 
-  def __init__(self):
-    threading.Thread.__init__(self)
-    self.setDaemon(True)
-    self.setName('Xlib-thread')
-    self._listening = False
-    self.record_display = display.Display()
-    self.local_display = display.Display()
-    self.ctx = None
-    self.keycode_to_symbol = collections.defaultdict(lambda: 'KEY_DUNNO')
-    self._setup_lookup()
-    self.events = []  # each of type XEvent
+	def __init__(self):
+		threading.Thread.__init__(self)
+		self.setDaemon(True)
+		self.setName('Xlib-thread')
+		self._listening = False
+		self.record_display = display.Display()
+		self.local_display = display.Display()
+		self.ctx = None
+		self.keycode_to_symbol = collections.defaultdict(lambda: 'KEY_DUNNO')
+		self._setup_lookup()
+		self.events = []  # each of type XEvent
 
-  def run(self):
-    """Standard run method for threading."""
-    self.start_listening()
+	def run(self):
+		"""Standard run method for threading."""
+		self.start_listening()
 
-  def _setup_lookup(self):
-    """Setup the key lookups."""
-    # set locale to default C locale, see Issue 77.
-    # Use setlocale(None) to get curent locale instead of getlocal.
-    # See Issue 125 and http://bugs.python.org/issue1699853.
-    OLD_CTYPE = locale.setlocale(locale.LC_CTYPE, None)
-    locale.setlocale(locale.LC_CTYPE, 'C')
-    for name in dir(XK):
-      if name[:3] == "XK_":
-        code = getattr(XK, name)
-        self.keycode_to_symbol[code] = 'KEY_' + name[3:].upper()
-    locale.setlocale(locale.LC_CTYPE, OLD_CTYPE)
-    self.keycode_to_symbol[65027] = 'KEY_ISO_LEVEL3_SHIFT'
-    self.keycode_to_symbol[269025062] = 'KEY_BACK'
-    self.keycode_to_symbol[269025063] = 'KEY_FORWARD'
-    self.keycode_to_symbol[16777215] = 'KEY_CAPS_LOCK'
-    self.keycode_to_symbol[269025067] = 'KEY_WAKEUP'
-    # Multimedia keys
-    self.keycode_to_symbol[269025042] = 'KEY_AUDIOMUTE'
-    self.keycode_to_symbol[269025041] = 'KEY_AUDIOLOWERVOLUME'
-    self.keycode_to_symbol[269025043] = 'KEY_AUDIORAISEVOLUME'
-    self.keycode_to_symbol[269025047] = 'KEY_AUDIONEXT'
-    self.keycode_to_symbol[269025044] = 'KEY_AUDIOPLAY'
-    self.keycode_to_symbol[269025046] = 'KEY_AUDIOPREV'
-    self.keycode_to_symbol[269025045] = 'KEY_AUDIOSTOP'
-    # Turkish / F layout
-    self.keycode_to_symbol[699] = 'KEY_GBREVE'   # scancode = 26 / 18
-    self.keycode_to_symbol[697] = 'KEY_IDOTLESS' # scancode = 23 / 19
-    self.keycode_to_symbol[442] = 'KEY_SCEDILLA' # scancode = 39 / 40
+	def _setup_lookup(self):
+		"""Setup the key lookups."""
+		# set locale to default C locale, see Issue 77.
+		# Use setlocale(None) to get curent locale instead of getlocal.
+		# See Issue 125 and http://bugs.python.org/issue1699853.
+		OLD_CTYPE = locale.setlocale(locale.LC_CTYPE, None)
+		locale.setlocale(locale.LC_CTYPE, 'C')
+		for name in dir(XK):
+			if name[:3] == "XK_":
+				code = getattr(XK, name)
+				self.keycode_to_symbol[code] = 'KEY_' + name[3:].upper()
+		locale.setlocale(locale.LC_CTYPE, OLD_CTYPE)
+		self.keycode_to_symbol[65027] = 'KEY_ISO_LEVEL3_SHIFT'
+		self.keycode_to_symbol[269025062] = 'KEY_BACK'
+		self.keycode_to_symbol[269025063] = 'KEY_FORWARD'
+		self.keycode_to_symbol[16777215] = 'KEY_CAPS_LOCK'
+		self.keycode_to_symbol[269025067] = 'KEY_WAKEUP'
+		# Multimedia keys
+		self.keycode_to_symbol[269025042] = 'KEY_AUDIOMUTE'
+		self.keycode_to_symbol[269025041] = 'KEY_AUDIOLOWERVOLUME'
+		self.keycode_to_symbol[269025043] = 'KEY_AUDIORAISEVOLUME'
+		self.keycode_to_symbol[269025047] = 'KEY_AUDIONEXT'
+		self.keycode_to_symbol[269025044] = 'KEY_AUDIOPLAY'
+		self.keycode_to_symbol[269025046] = 'KEY_AUDIOPREV'
+		self.keycode_to_symbol[269025045] = 'KEY_AUDIOSTOP'
+		# Turkish / F layout
+		self.keycode_to_symbol[699] = 'KEY_GBREVE'   # scancode = 26 / 18
+		self.keycode_to_symbol[697] = 'KEY_IDOTLESS' # scancode = 23 / 19
+		self.keycode_to_symbol[442] = 'KEY_SCEDILLA' # scancode = 39 / 40
 
 
-  def next_event(self):
-    """Returns the next event in queue, or None if none."""
-    if self.events:
-      return self.events.pop(0)
-    return None
+	def next_event(self):
+		"""Returns the next event in queue, or None if none."""
+		if self.events:
+			return self.events.pop(0)
+		return None
 
-  def start_listening(self):
-    """Start listening to RECORD extension and queuing events."""
-    if not self.record_display.has_extension("RECORD"):
-      print("RECORD extension not found")
-      sys.exit(1)
-    self._listening = True
-    self.ctx = self.record_display.record_create_context(
-        0,
-        [record.AllClients],
-        [{
-            'core_requests': (0, 0),
-            'core_replies': (0, 0),
-            'ext_requests': (0, 0, 0, 0),
-            'ext_replies': (0, 0, 0, 0),
-            'delivered_events': (0, 0),
-            'device_events': (X.KeyPress, X.MotionNotify),  # why only two, it's a range?
-            'errors': (0, 0),
-            'client_started': False,
-            'client_died': False,
-        }])
+	def start_listening(self):
+		"""Start listening to RECORD extension and queuing events."""
+		if not self.record_display.has_extension("RECORD"):
+			print("RECORD extension not found")
+			sys.exit(1)
+		self._listening = True
+		self.ctx = self.record_display.record_create_context(
+				0,
+				[record.AllClients],
+				[{
+						'core_requests': (0, 0),
+						'core_replies': (0, 0),
+						'ext_requests': (0, 0, 0, 0),
+						'ext_replies': (0, 0, 0, 0),
+						'delivered_events': (0, 0),
+						'device_events': (X.KeyPress, X.MotionNotify),  # why only two, it's a range?
+						'errors': (0, 0),
+						'client_started': False,
+						'client_died': False,
+				}])
 
-    self.record_display.record_enable_context(self.ctx, self._handler)
+		self.record_display.record_enable_context(self.ctx, self._handler)
 
-    # Don't understand this, how can we free the context yet still use it in Stop?
-    self.record_display.record_free_context(self.ctx)
-    self.record_display.close()
+		# Don't understand this, how can we free the context yet still use it in Stop?
+		self.record_display.record_free_context(self.ctx)
+		self.record_display.close()
 
-  def stop_listening(self):
-    """Stop listening to events."""
-    if not self._listening:
-      return
-    self.local_display.record_disable_context(self.ctx)
-    self.local_display.flush()
-    self.local_display.close()
-    self._listening = False
-    self.join(0.05)
+	def stop_listening(self):
+		"""Stop listening to events."""
+		if not self._listening:
+			return
+		self.local_display.record_disable_context(self.ctx)
+		self.local_display.flush()
+		self.local_display.close()
+		self._listening = False
+		self.join(0.05)
 
-  def listening(self):
-    """Are you listening?"""
-    return self._listening
+	def listening(self):
+		"""Are you listening?"""
+		return self._listening
 
-  def _handler(self, reply):
-    """Handle an event."""
-    if reply.category != record.FromServer:
-      return
-    if reply.client_swapped:
-      return
-    data = reply.data
-    while len(data):
-      event, data = rq.EventField(None).parse_binary_value(
-          data, self.record_display.display, None, None)
-      if event.type == X.ButtonPress:
-        self._handle_mouse(event, 1)
-      elif event.type == X.ButtonRelease:
-        self._handle_mouse(event, 0)
-      elif event.type == X.KeyPress:
-        self._handle_key(event, 1)
-      elif event.type == X.KeyRelease:
-        self._handle_key(event, 0)
-      elif event.type == X.MotionNotify:
-        self._handle_mouse(event, 2)
-      else:
-        print(event)
+	def _handler(self, reply):
+		"""Handle an event."""
+		if reply.category != record.FromServer:
+			return
+		if reply.client_swapped:
+			return
+		data = reply.data
+		while len(data):
+			event, data = rq.EventField(None).parse_binary_value(
+					data, self.record_display.display, None, None)
+			if event.type == X.ButtonPress:
+				self._handle_mouse(event, 1)
+			elif event.type == X.ButtonRelease:
+				self._handle_mouse(event, 0)
+			elif event.type == X.KeyPress:
+				self._handle_key(event, 1)
+			elif event.type == X.KeyRelease:
+				self._handle_key(event, 0)
+			elif event.type == X.MotionNotify:
+				self._handle_mouse(event, 2)
+			else:
+				print(event)
 
-  def _handle_mouse(self, event, value):
-    """Add a mouse event to events.
-    Params:
-      event: the event info
-      value: 2=motion, 1=down, 0=up
-    """
-    if value == 2:
-      self.events.append(XEvent('EV_MOV',
-          0, 0, (event.root_x, event.root_y)))
-    elif event.detail in [4, 5]:
-      if event.detail == 5:
-        value = -1
-      else:
-        value = 1
-      self.events.append(XEvent('EV_REL',
-          0, XEvents._butn_to_code.get(event.detail, 'BTN_%d' % event.detail), value))
-    else:
-      self.events.append(XEvent('EV_KEY',
-          0, XEvents._butn_to_code.get(event.detail, 'BTN_%d' % event.detail), value))
+	def _handle_mouse(self, event, value):
+		"""Add a mouse event to events.
+		Params:
+			event: the event info
+			value: 2=motion, 1=down, 0=up
+		"""
+		if value == 2:
+			self.events.append(XEvent('EV_MOV',
+					0, 0, (event.root_x, event.root_y)))
+		elif event.detail in [4, 5]:
+			if event.detail == 5:
+				value = -1
+			else:
+				value = 1
+			self.events.append(XEvent('EV_REL',
+					0, XEvents._butn_to_code.get(event.detail, 'BTN_%d' % event.detail), value))
+		else:
+			self.events.append(XEvent('EV_KEY',
+					0, XEvents._butn_to_code.get(event.detail, 'BTN_%d' % event.detail), value))
 
-  def _handle_key(self, event, value):
-    """Add key event to events.
-    Params:
-      event: the event info
-      value: 1=down, 0=up
-    """
-    keysym = self.local_display.keycode_to_keysym(event.detail, 0)
-    #if keysym not in self.keycode_to_symbol:
-    #  print('Missing code for %d = %d' % (event.detail - 8, keysym))
-    self.events.append(XEvent('EV_KEY', event.detail - 8, self.keycode_to_symbol[keysym], value))
+	def _handle_key(self, event, value):
+		"""Add key event to events.
+		Params:
+			event: the event info
+			value: 1=down, 0=up
+		"""
+		keysym = self.local_display.keycode_to_keysym(event.detail, 0)
+		#if keysym not in self.keycode_to_symbol:
+		#  print('Missing code for %d = %d' % (event.detail - 8, keysym))
+		self.events.append(XEvent('EV_KEY', event.detail - 8, self.keycode_to_symbol[keysym], value))
 
 def _run_test():
-  """Run a test or debug session."""
-  events = XEvents()
-  events.start()
-  while not events.listening():
-    time.sleep(1)
-    print('Waiting for initializing...')
-  print('Press ESCape to quit')
-  try:
-    while events.listening():
-      try:
-        evt = events.next_event()
-      except KeyboardInterrupt:
-        print('User interrupted')
-        events.stop_listening()
-      if evt:
-        print(evt)
-        if evt.code == 'KEY_ESCAPE':
-          events.stop_listening()
-  finally:
-    events.stop_listening()
+	"""Run a test or debug session."""
+	events = XEvents()
+	events.start()
+	while not events.listening():
+		time.sleep(1)
+		print('Waiting for initializing...')
+	print('Press ESCape to quit')
+	try:
+		while events.listening():
+			try:
+				evt = events.next_event()
+			except KeyboardInterrupt:
+				print('User interrupted')
+				events.stop_listening()
+			if evt:
+				print(evt)
+				if evt.code == 'KEY_ESCAPE':
+					events.stop_listening()
+	finally:
+		events.stop_listening()
 
 def main():
-  """
-  Run an application that reports whenever keys are pressed, until SIGUSR1
-  is received.
+	"""
+	Run an application that reports whenever keys are pressed, until SIGUSR1
+	is received.
 
-  Prints binary data representing each key press, in big endian:
-    - byte 0: 0 for released, 1 for pressed
-    - byte 1: 0xff for control, otherwise ignored
-    - byte 2,3: big endian key code
+	Prints binary data representing each key press, in big endian:
+		- byte 0: 0 for released, 1 for pressed
+		- byte 1: 0xff for control, otherwise ignored
+		- byte 2,3: big endian key code
 
-  The special integers 0xfffffffe, 0xfffffffd, 0xfffffffc are printing while
-  the application is setting up, has just started running and is exiting,
-  repectively.
+	The special integers 0xfffffffe, 0xfffffffd, 0xfffffffc are printing while
+	the application is setting up, has just started running and is exiting,
+	repectively.
 
-  This application expects stdout to be read 4 bytes at a time!
-  """
-  import os
-  import struct
-  import signal
-  main_running = True
-  def handle_sigusr1(signum, frame):
-    nonlocal main_running
-    main_running = False
-  signal.signal(signal.SIGUSR1, handle_sigusr1)
+	This application expects stdout to be read 4 bytes at a time!
+	"""
+	import os
+	import struct
+	import signal
+	main_running = True
+	def handle_sigusr1(signum, frame):
+		nonlocal main_running
+		main_running = False
+	signal.signal(signal.SIGUSR1, handle_sigusr1)
 
-  with os.fdopen(sys.stdout.fileno(), "wb", closefd=False) as stdout:
-    events = XEvents()
-    events.start()
-    while not events.listening():
-      time.sleep(1)
-      stdout.write(struct.pack('>I', 0xfffffffe))
-      stdout.flush()
-    stdout.write(struct.pack('>I', 0xfffffffd))
-    stdout.flush()
+	with os.fdopen(sys.stdout.fileno(), "wb", closefd=False) as stdout:
+		events = XEvents()
+		events.start()
+		while not events.listening():
+			time.sleep(1)
+			stdout.write(struct.pack('>I', 0xfffffffe))
+			stdout.flush()
+		stdout.write(struct.pack('>I', 0xfffffffd))
+		stdout.flush()
 
-    try:
-      while main_running and events.listening():
-        try:
-          evt = events.next_event()
-        except KeyboardInterrupt:
-          events.stop_listening()
-        if evt is not None and evt.get_type() == 'EV_KEY':
-          v = int(evt.get_value())
-          c = int(evt.get_scancode())
-          stdout.write(struct.pack('>BxH', v, c))
-          stdout.flush()
-    finally:
-      events.stop_listening()
-    stdout.write(struct.pack('>I', 0xfffffffc))
-    stdout.flush()
+		try:
+			while main_running and events.listening():
+				try:
+					evt = events.next_event()
+				except KeyboardInterrupt:
+					events.stop_listening()
+				if evt is not None and evt.get_type() == 'EV_KEY':
+					v = int(evt.get_value())
+					c = int(evt.get_scancode())
+					stdout.write(struct.pack('>BxH', v, c))
+					stdout.flush()
+		finally:
+			events.stop_listening()
+		stdout.write(struct.pack('>I', 0xfffffffc))
+		stdout.flush()
 
 if __name__ == '__main__':
-  main()
+	main()
 `
