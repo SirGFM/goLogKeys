@@ -29,6 +29,7 @@ const xlib_py_script = `
 #
 # 2023-07-21 - Modified by Gabriel Francisco Mandaji:
 #     * Change indentation to tabs
+#     * Use queue.SimpleQueue for thread communication
 
 """Library to get X events from Record.
 
@@ -48,6 +49,7 @@ import sys
 import time
 import threading
 import collections
+import queue
 
 class XEvent(object):
 	"""An event, mimics edev.py events."""
@@ -98,7 +100,7 @@ class XEvents(threading.Thread):
 		self.ctx = None
 		self.keycode_to_symbol = collections.defaultdict(lambda: 'KEY_DUNNO')
 		self._setup_lookup()
-		self.events = []  # each of type XEvent
+		self.events = queue.SimpleQueue()  # each of type XEvent
 
 	def run(self):
 		"""Standard run method for threading."""
@@ -138,7 +140,10 @@ class XEvents(threading.Thread):
 	def next_event(self):
 		"""Returns the next event in queue, or None if none."""
 		if self.events:
-			return self.events.pop(0)
+			try:
+				return self.events.get(block=True, timeout=1)
+			except queue.Empty:
+				return None
 		return None
 
 	def start_listening(self):
@@ -212,17 +217,17 @@ class XEvents(threading.Thread):
 			value: 2=motion, 1=down, 0=up
 		"""
 		if value == 2:
-			self.events.append(XEvent('EV_MOV',
+			self.events.put_nowait(XEvent('EV_MOV',
 					0, 0, (event.root_x, event.root_y)))
 		elif event.detail in [4, 5]:
 			if event.detail == 5:
 				value = -1
 			else:
 				value = 1
-			self.events.append(XEvent('EV_REL',
+			self.events.put_nowait(XEvent('EV_REL',
 					0, XEvents._butn_to_code.get(event.detail, 'BTN_%d' % event.detail), value))
 		else:
-			self.events.append(XEvent('EV_KEY',
+			self.events.put_nowait(XEvent('EV_KEY',
 					0, XEvents._butn_to_code.get(event.detail, 'BTN_%d' % event.detail), value))
 
 	def _handle_key(self, event, value):
@@ -234,7 +239,7 @@ class XEvents(threading.Thread):
 		keysym = self.local_display.keycode_to_keysym(event.detail, 0)
 		#if keysym not in self.keycode_to_symbol:
 		#  print('Missing code for %d = %d' % (event.detail - 8, keysym))
-		self.events.append(XEvent('EV_KEY', event.detail - 8, self.keycode_to_symbol[keysym], value))
+		self.events.put_nowait(XEvent('EV_KEY', event.detail - 8, self.keycode_to_symbol[keysym], value))
 
 def _run_test():
 	"""Run a test or debug session."""
