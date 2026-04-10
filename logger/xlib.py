@@ -1,10 +1,3 @@
-// +build !dummy,linux
-
-package logger
-
-// NOTE: this requires xlib for Python3, which may be installed on Ubuntu from
-// the package python3-xlib.
-const xlib_py_script = `
 #!/usr/bin/python
 #
 # Copyright 2010 Google Inc.
@@ -316,4 +309,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-`

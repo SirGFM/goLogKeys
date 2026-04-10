@@ -3,6 +3,7 @@
 package logger
 
 import (
+    _ "embed"
     "encoding/binary"
     "errors"
     "io"
@@ -12,6 +13,11 @@ import (
     "os/signal"
     "syscall"
 )
+
+// NOTE: this requires xlib for Python3, which may be installed on Ubuntu from
+// the package python3-xlib.
+//go:embed xlib.py
+var xlib_py_script string
 
 const buffer_len = 128
 
